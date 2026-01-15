@@ -65,8 +65,8 @@ proxies = {
 }
 
 url = 'https://development.kiosbank.com:4432/auth/Sign-On'
-username = 'ydn41jme5oc2'
-password = '619FDEA9324E5704D1C9C0C062457E08'
+username = ''
+password = ''
 payload = {
     "mitra": "DJI",
     "accountID": "081310307754",

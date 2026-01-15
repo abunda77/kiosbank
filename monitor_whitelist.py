@@ -3,6 +3,7 @@ from requests.auth import HTTPDigestAuth
 import urllib3
 import time
 from datetime import datetime
+from env_config import get_env, get_env_int
 
 # Suppress SSL warnings
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -11,20 +12,21 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # KONFIGURASI
 # ============================================================
 
-VPS_IP = "193.219.97.148"
-PROXY_HOST = '127.0.0.1'
-PROXY_PORT = 1080
+# Load from environment variables
+VPS_IP = get_env('VPS_IP', required=True)
+PROXY_HOST = get_env('PROXY_HOST', default='127.0.0.1')
+PROXY_PORT = get_env_int('PROXY_PORT', default=1080)
 
-API_URL = 'https://development.kiosbank.com:4432/auth/Sign-On'
-API_USERNAME = 'ydn41jme5oc2'
-API_PASSWORD = '619FDEA9324E5704D1C9C0C062457E08'
+API_URL = get_env('KIOSBANK_API_URL', required=True)
+API_USERNAME = get_env('KIOSBANK_API_USERNAME', required=True)
+API_PASSWORD = get_env('KIOSBANK_API_PASSWORD', required=True)
 
 payload = {
-    "mitra": "DJI",
-    "accountID": "081310307754",
-    "merchantID": "DJI000651",
-    "merchantName": "Sinara Artha Mandiri",
-    "counterID": "1"
+    "mitra": get_env('KIOSBANK_MITRA', required=True),
+    "accountID": get_env('KIOSBANK_ACCOUNT_ID', required=True),
+    "merchantID": get_env('KIOSBANK_MERCHANT_ID', required=True),
+    "merchantName": get_env('KIOSBANK_MERCHANT_NAME', required=True),
+    "counterID": get_env('KIOSBANK_COUNTER_ID', required=True)
 }
 
 proxies = {
