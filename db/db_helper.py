@@ -1,438 +1,217 @@
+#!/usr/bin/env python3
 """
-Database Helper untuk Struktur Normalisasi Kategori dan Sub Kategori
-Menyediakan fungsi-fungsi untuk CRUD operations dengan relasi antar tabel
+Database Import Helper for KIOSBANK PPOB
+Helps import SQL files in the correct order with validation
 """
 
+import os
+import sys
 import sqlite3
-from typing import List, Dict, Optional, Tuple
-from datetime import datetime
+from pathlib import Path
 
+# Colors for terminal output
+class Colors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
 
-class PPOBDatabase:
-    """Helper class untuk mengelola database PPOB dengan struktur normalisasi"""
-    
-    def __init__(self, db_path: str = "db/ppob.db"):
-        """
-        Initialize database connection
-        
-        Args:
-            db_path: Path ke file database SQLite
-        """
-        self.db_path = db_path
-        self.conn = None
-    
-    def connect(self):
-        """Membuat koneksi ke database"""
-        self.conn = sqlite3.connect(self.db_path)
-        self.conn.row_factory = sqlite3.Row  # Agar hasil query bisa diakses seperti dict
-        # Enable foreign key constraints
-        self.conn.execute("PRAGMA foreign_keys = ON")
-        return self.conn
-    
-    def close(self):
-        """Menutup koneksi database"""
-        if self.conn:
-            self.conn.close()
-    
-    def __enter__(self):
-        """Context manager entry"""
-        self.connect()
-        return self
-    
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """Context manager exit"""
-        self.close()
-    
-    # ========================================================================
-    # KATEGORI OPERATIONS
-    # ========================================================================
-    
-    def get_all_kategori(self, aktif_only: bool = True) -> List[Dict]:
-        """
-        Mendapatkan semua kategori
-        
-        Args:
-            aktif_only: Jika True, hanya ambil kategori aktif
-            
-        Returns:
-            List of kategori dictionaries
-        """
-        query = "SELECT * FROM kategori"
-        if aktif_only:
-            query += " WHERE aktif = 1"
-        query += " ORDER BY urutan, nama"
-        
-        cursor = self.conn.cursor()
-        cursor.execute(query)
-        return [dict(row) for row in cursor.fetchall()]
-    
-    def get_kategori_by_id(self, kategori_id: int) -> Optional[Dict]:
-        """Mendapatkan kategori berdasarkan ID"""
-        cursor = self.conn.cursor()
-        cursor.execute("SELECT * FROM kategori WHERE id = ?", (kategori_id,))
-        row = cursor.fetchone()
-        return dict(row) if row else None
-    
-    def insert_kategori(self, nama: str, kode: str = None, 
-                       deskripsi: str = None, urutan: int = 0) -> int:
-        """
-        Insert kategori baru
-        
-        Returns:
-            ID kategori yang baru dibuat
-        """
-        query = """
-        INSERT INTO kategori (nama, kode, deskripsi, urutan)
-        VALUES (?, ?, ?, ?)
-        """
-        cursor = self.conn.cursor()
-        cursor.execute(query, (nama, kode, deskripsi, urutan))
-        self.conn.commit()
-        return cursor.lastrowid
-    
-    def update_kategori(self, kategori_id: int, **kwargs) -> bool:
-        """
-        Update kategori
-        
-        Args:
-            kategori_id: ID kategori yang akan diupdate
-            **kwargs: Field yang akan diupdate (nama, kode, deskripsi, aktif, urutan)
-            
-        Returns:
-            True jika berhasil
-        """
-        allowed_fields = ['nama', 'kode', 'deskripsi', 'aktif', 'urutan']
-        updates = {k: v for k, v in kwargs.items() if k in allowed_fields}
-        
-        if not updates:
-            return False
-        
-        set_clause = ", ".join([f"{k} = ?" for k in updates.keys()])
-        query = f"UPDATE kategori SET {set_clause} WHERE id = ?"
-        
-        cursor = self.conn.cursor()
-        cursor.execute(query, (*updates.values(), kategori_id))
-        self.conn.commit()
-        return cursor.rowcount > 0
-    
-    # ========================================================================
-    # SUB KATEGORI OPERATIONS
-    # ========================================================================
-    
-    def get_sub_kategori_by_kategori(self, kategori_id: int, 
-                                    aktif_only: bool = True) -> List[Dict]:
-        """
-        Mendapatkan semua sub kategori berdasarkan kategori
-        
-        Args:
-            kategori_id: ID kategori
-            aktif_only: Jika True, hanya ambil sub kategori aktif
-            
-        Returns:
-            List of sub kategori dictionaries
-        """
-        query = "SELECT * FROM sub_kategori WHERE kategori_id = ?"
-        params = [kategori_id]
-        
-        if aktif_only:
-            query += " AND aktif = 1"
-        query += " ORDER BY urutan, nama"
-        
-        cursor = self.conn.cursor()
-        cursor.execute(query, params)
-        return [dict(row) for row in cursor.fetchall()]
-    
-    def get_sub_kategori_by_id(self, sub_kategori_id: int) -> Optional[Dict]:
-        """Mendapatkan sub kategori berdasarkan ID"""
-        cursor = self.conn.cursor()
-        cursor.execute("SELECT * FROM sub_kategori WHERE id = ?", (sub_kategori_id,))
-        row = cursor.fetchone()
-        return dict(row) if row else None
-    
-    def insert_sub_kategori(self, kategori_id: int, nama: str, 
-                           kode: str = None, deskripsi: str = None, 
-                           urutan: int = 0) -> int:
-        """
-        Insert sub kategori baru
-        
-        Returns:
-            ID sub kategori yang baru dibuat
-        """
-        query = """
-        INSERT INTO sub_kategori (kategori_id, nama, kode, deskripsi, urutan)
-        VALUES (?, ?, ?, ?, ?)
-        """
-        cursor = self.conn.cursor()
-        cursor.execute(query, (kategori_id, nama, kode, deskripsi, urutan))
-        self.conn.commit()
-        return cursor.lastrowid
-    
-    # ========================================================================
-    # PRODUK OPERATIONS
-    # ========================================================================
-    
-    def get_produk_with_kategori(self, aktif_only: bool = True) -> List[Dict]:
-        """
-        Mendapatkan semua produk dengan informasi kategori lengkap
-        
-        Returns:
-            List of produk dengan kategori dan sub kategori
-        """
-        query = """
-        SELECT 
-            p.*,
-            sk.nama AS sub_kategori_nama,
-            sk.kode AS sub_kategori_kode,
-            k.id AS kategori_id,
-            k.nama AS kategori_nama,
-            k.kode AS kategori_kode
-        FROM produk_ppob p
-        LEFT JOIN sub_kategori sk ON p.sub_kategori_id = sk.id
-        LEFT JOIN kategori k ON sk.kategori_id = k.id
-        """
-        
-        if aktif_only:
-            query += " WHERE p.aktif = 1"
-        query += " ORDER BY k.urutan, sk.urutan, p.nama_produk"
-        
-        cursor = self.conn.cursor()
-        cursor.execute(query)
-        return [dict(row) for row in cursor.fetchall()]
-    
-    def get_produk_by_sub_kategori(self, sub_kategori_id: int, 
-                                   aktif_only: bool = True) -> List[Dict]:
-        """Mendapatkan produk berdasarkan sub kategori"""
-        query = "SELECT * FROM produk_ppob WHERE sub_kategori_id = ?"
-        params = [sub_kategori_id]
-        
-        if aktif_only:
-            query += " AND aktif = 1"
-        query += " ORDER BY nama_produk"
-        
-        cursor = self.conn.cursor()
-        cursor.execute(query, params)
-        return [dict(row) for row in cursor.fetchall()]
-    
-    def get_produk_by_kode(self, kode: str) -> Optional[Dict]:
-        """Mendapatkan produk berdasarkan kode"""
-        query = """
-        SELECT 
-            p.*,
-            sk.nama AS sub_kategori_nama,
-            k.nama AS kategori_nama
-        FROM produk_ppob p
-        LEFT JOIN sub_kategori sk ON p.sub_kategori_id = sk.id
-        LEFT JOIN kategori k ON sk.kategori_id = k.id
-        WHERE p.kode = ?
-        """
-        cursor = self.conn.cursor()
-        cursor.execute(query, (kode,))
-        row = cursor.fetchone()
-        return dict(row) if row else None
-    
-    def insert_produk(self, kode: str, nama_produk: str, 
-                     sub_kategori_id: int = None, **kwargs) -> int:
-        """
-        Insert produk baru
-        
-        Args:
-            kode: Kode produk (unique)
-            nama_produk: Nama produk
-            sub_kategori_id: ID sub kategori
-            **kwargs: Field lain (hpp, biaya_admin, fee_mitra, markup, dll)
-            
-        Returns:
-            ID produk yang baru dibuat
-        """
-        fields = ['kode', 'nama_produk', 'sub_kategori_id']
-        values = [kode, nama_produk, sub_kategori_id]
-        
-        # Tambahkan field optional
-        allowed_fields = ['hpp', 'biaya_admin', 'fee_mitra', 'markup', 
-                         'harga_beli', 'harga_jual', 'profit', 'aktif']
-        for field in allowed_fields:
-            if field in kwargs:
-                fields.append(field)
-                values.append(kwargs[field])
-        
-        placeholders = ", ".join(["?" for _ in fields])
-        query = f"""
-        INSERT INTO produk_ppob ({", ".join(fields)})
-        VALUES ({placeholders})
-        """
-        
-        cursor = self.conn.cursor()
-        cursor.execute(query, values)
-        self.conn.commit()
-        return cursor.lastrowid
-    
-    def update_produk(self, kode: str, **kwargs) -> bool:
-        """
-        Update produk berdasarkan kode
-        
-        Args:
-            kode: Kode produk
-            **kwargs: Field yang akan diupdate
-            
-        Returns:
-            True jika berhasil
-        """
-        allowed_fields = ['nama_produk', 'sub_kategori_id', 'hpp', 'biaya_admin', 
-                         'fee_mitra', 'markup', 'harga_beli', 'harga_jual', 
-                         'profit', 'aktif']
-        updates = {k: v for k, v in kwargs.items() if k in allowed_fields}
-        
-        if not updates:
-            return False
-        
-        set_clause = ", ".join([f"{k} = ?" for k in updates.keys()])
-        query = f"UPDATE produk_ppob SET {set_clause} WHERE kode = ?"
-        
-        cursor = self.conn.cursor()
-        cursor.execute(query, (*updates.values(), kode))
-        self.conn.commit()
-        return cursor.rowcount > 0
-    
-    # ========================================================================
-    # UTILITY FUNCTIONS
-    # ========================================================================
-    
-    def get_kategori_tree(self) -> List[Dict]:
-        """
-        Mendapatkan tree struktur kategori -> sub kategori -> produk
-        
-        Returns:
-            List of kategori dengan nested sub_kategori dan produk
-        """
-        result = []
-        
-        # Get all kategori
-        kategori_list = self.get_all_kategori()
-        
-        for kategori in kategori_list:
-            kategori_data = dict(kategori)
-            
-            # Get sub kategori untuk kategori ini
-            sub_kategori_list = self.get_sub_kategori_by_kategori(kategori['id'])
-            
-            kategori_data['sub_kategori'] = []
-            for sub_kategori in sub_kategori_list:
-                sub_kategori_data = dict(sub_kategori)
-                
-                # Get produk untuk sub kategori ini
-                produk_list = self.get_produk_by_sub_kategori(sub_kategori['id'])
-                sub_kategori_data['produk'] = produk_list
-                
-                kategori_data['sub_kategori'].append(sub_kategori_data)
-            
-            result.append(kategori_data)
-        
-        return result
-    
-    def search_produk(self, keyword: str) -> List[Dict]:
-        """
-        Search produk berdasarkan keyword (nama atau kode)
-        
-        Args:
-            keyword: Keyword pencarian
-            
-        Returns:
-            List of produk yang match
-        """
-        query = """
-        SELECT 
-            p.*,
-            sk.nama AS sub_kategori_nama,
-            k.nama AS kategori_nama
-        FROM produk_ppob p
-        LEFT JOIN sub_kategori sk ON p.sub_kategori_id = sk.id
-        LEFT JOIN kategori k ON sk.kategori_id = k.id
-        WHERE p.aktif = 1 
-        AND (p.nama_produk LIKE ? OR p.kode LIKE ?)
-        ORDER BY p.nama_produk
-        """
-        
-        search_pattern = f"%{keyword}%"
-        cursor = self.conn.cursor()
-        cursor.execute(query, (search_pattern, search_pattern))
-        return [dict(row) for row in cursor.fetchall()]
-    
-    def get_statistics(self) -> Dict:
-        """
-        Mendapatkan statistik database
-        
-        Returns:
-            Dictionary berisi jumlah kategori, sub kategori, dan produk
-        """
-        cursor = self.conn.cursor()
-        
-        # Count kategori
-        cursor.execute("SELECT COUNT(*) FROM kategori WHERE aktif = 1")
-        total_kategori = cursor.fetchone()[0]
-        
-        # Count sub kategori
-        cursor.execute("SELECT COUNT(*) FROM sub_kategori WHERE aktif = 1")
-        total_sub_kategori = cursor.fetchone()[0]
-        
-        # Count produk
-        cursor.execute("SELECT COUNT(*) FROM produk_ppob WHERE aktif = 1")
-        total_produk = cursor.fetchone()[0]
-        
-        # Produk per kategori
-        cursor.execute("""
-        SELECT 
-            k.nama AS kategori,
-            COUNT(p.id) AS jumlah_produk
-        FROM kategori k
-        LEFT JOIN sub_kategori sk ON k.id = sk.kategori_id
-        LEFT JOIN produk_ppob p ON sk.id = p.sub_kategori_id AND p.aktif = 1
-        WHERE k.aktif = 1
-        GROUP BY k.id, k.nama
-        ORDER BY k.urutan
-        """)
-        produk_per_kategori = [dict(row) for row in cursor.fetchall()]
-        
-        return {
-            'total_kategori': total_kategori,
-            'total_sub_kategori': total_sub_kategori,
-            'total_produk': total_produk,
-            'produk_per_kategori': produk_per_kategori
-        }
+def print_header(text):
+    print(f"\n{Colors.HEADER}{Colors.BOLD}{'='*60}{Colors.ENDC}")
+    print(f"{Colors.HEADER}{Colors.BOLD}{text.center(60)}{Colors.ENDC}")
+    print(f"{Colors.HEADER}{Colors.BOLD}{'='*60}{Colors.ENDC}\n")
 
+def print_success(text):
+    print(f"{Colors.OKGREEN}[OK] {text}{Colors.ENDC}")
 
-# ========================================================================
-# EXAMPLE USAGE
-# ========================================================================
+def print_error(text):
+    print(f"{Colors.FAIL}[ERROR] {text}{Colors.ENDC}")
+
+def print_warning(text):
+    print(f"{Colors.WARNING}[WARNING] {text}{Colors.ENDC}")
+
+def print_info(text):
+    print(f"{Colors.OKCYAN}[INFO] {text}{Colors.ENDC}")
+
+def check_file_exists(filepath):
+    """Check if SQL file exists"""
+    if not os.path.exists(filepath):
+        print_error(f"File not found: {filepath}")
+        return False
+    return True
+
+def execute_sql_file(db_path, sql_file):
+    """Execute SQL file and return success status"""
+    try:
+        # Read SQL file
+        with open(sql_file, 'r', encoding='utf-8') as f:
+            sql_content = f.read()
+        
+        # Connect to database
+        conn = sqlite3.connect(db_path)
+        conn.execute("PRAGMA foreign_keys = ON")  # Enable foreign key constraints
+        cursor = conn.cursor()
+        
+        # Execute SQL
+        cursor.executescript(sql_content)
+        conn.commit()
+        conn.close()
+        
+        return True, None
+    except Exception as e:
+        return False, str(e)
+
+def verify_data(db_path):
+    """Verify imported data"""
+    try:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        
+        # Count records
+        cursor.execute("SELECT COUNT(*) FROM kategori")
+        kategori_count = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COUNT(*) FROM sub_kategori")
+        sub_kategori_count = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COUNT(*) FROM produk_ppob")
+        produk_count = cursor.fetchone()[0]
+        
+        conn.close()
+        
+        print_info(f"Kategori: {kategori_count} records")
+        print_info(f"Sub Kategori: {sub_kategori_count} records")
+        print_info(f"Produk PPOB: {produk_count} records")
+        
+        return True
+    except Exception as e:
+        print_error(f"Verification failed: {e}")
+        return False
+
+def main():
+    print_header("KIOSBANK PPOB Database Import Helper")
+    
+    # Get project root directory
+    project_root = Path(__file__).parent.parent
+    db_dir = project_root / "db"
+    db_path = db_dir / "ppob.db"
+    
+    print_info(f"Project root: {project_root}")
+    print_info(f"Database path: {db_path}")
+    
+    # SQL files in correct order
+    sql_files = [
+        ("structure_table.sql", "Creating database structure"),
+        ("sample_data_KATEGORI_SUBKATEGORI.sql", "Importing categories and sub-categories"),
+        # ("sample_data_PPOB.sql", "Importing PPOB products"),
+        ("sample_data_PULSA_PRABAYAR.sql", "Importing PULSA PRABAYAR products")
+        # ("sample_data_PAKET_DATA.sql", "Importing PAKET DATA products"),
+        # ("sample_data_GAME.sql", "Importing GAME products")
+        # ("sample_data_product.sql", "Importing other products (Game, Pulsa, Paket Data)")
+    ]
+    
+    # Check if all files exist
+    print_header("Step 1: Checking SQL Files")
+    all_files_exist = True
+    for sql_file, _ in sql_files:
+        file_path = db_dir / sql_file
+        if check_file_exists(file_path):
+            print_success(f"Found: {sql_file}")
+        else:
+            all_files_exist = False
+            # sample_data_product.sql is optional
+            if sql_file != "sample_data_product.sql":
+                print_error(f"Missing required file: {sql_file}")
+            else:
+                print_warning(f"Optional file not found: {sql_file}")
+    
+    if not all_files_exist:
+        # Check if at least required files exist
+        required_files = [f for f, _ in sql_files[:3]]  # First 3 files are required
+        required_exist = all(check_file_exists(db_dir / f) for f in required_files)
+        if not required_exist:
+            print_error("\nMissing required SQL files. Cannot proceed.")
+            sys.exit(1)
+        else:
+            print_warning("\nSome optional files are missing, but will continue with required files.")
+    
+    # Confirm before proceeding
+    print_header("Step 2: Confirmation")
+    if db_path.exists():
+        print_warning(f"Database already exists: {db_path}")
+        response = input(f"{Colors.WARNING}Do you want to recreate the database? This will DELETE all existing data! (yes/no): {Colors.ENDC}")
+        if response.lower() != 'yes':
+            print_info("Import cancelled by user.")
+            sys.exit(0)
+        else:
+            # Backup existing database
+            backup_path = db_path.with_suffix('.db.backup')
+            print_info(f"Creating backup: {backup_path}")
+            import shutil
+            shutil.copy2(db_path, backup_path)
+            print_success(f"Backup created: {backup_path}")
+    else:
+        print_info("Database does not exist. Will create new database.")
+        response = input(f"{Colors.OKCYAN}Proceed with import? (yes/no): {Colors.ENDC}")
+        if response.lower() != 'yes':
+            print_info("Import cancelled by user.")
+            sys.exit(0)
+    
+    # Import SQL files
+    print_header("Step 3: Importing SQL Files")
+    for sql_file, description in sql_files:
+        file_path = db_dir / sql_file
+        
+        # Skip if file doesn't exist (optional files)
+        if not file_path.exists():
+            print_warning(f"Skipping: {sql_file} (file not found)")
+            continue
+        
+        print_info(f"{description}...")
+        print_info(f"Executing: {sql_file}")
+        
+        success, error = execute_sql_file(db_path, file_path)
+        
+        if success:
+            print_success(f"Successfully imported: {sql_file}")
+        else:
+            print_error(f"Failed to import: {sql_file}")
+            print_error(f"Error: {error}")
+            
+            # If this is a required file, stop
+            if sql_file != "sample_data_product.sql":
+                print_error("\nImport failed. Please check the error above.")
+                sys.exit(1)
+            else:
+                print_warning("Optional file import failed, but continuing...")
+    
+    # Verify imported data
+    print_header("Step 4: Verifying Data")
+    if verify_data(db_path):
+        print_success("Data verification completed successfully!")
+    else:
+        print_warning("Data verification encountered issues.")
+    
+    # Final summary
+    print_header("Import Complete!")
+    print_success(f"Database created successfully: {db_path}")
+    print_info("\nYou can now use the database in your application.")
+    print_info("To verify data, you can run SQL queries using:")
+    print_info(f"  sqlite3 {db_path}")
+    print_info("\nFor more information, see: db/migration_guide.md")
 
 if __name__ == "__main__":
-    # Contoh penggunaan dengan context manager
-    with PPOBDatabase("db/ppob.db") as db:
-        # Get all kategori
-        print("=== KATEGORI ===")
-        kategori_list = db.get_all_kategori()
-        for kat in kategori_list:
-            print(f"{kat['id']}. {kat['nama']} ({kat['kode']})")
-        
-        print("\n=== SUB KATEGORI (Kategori: Pulsa & Data) ===")
-        sub_kat_list = db.get_sub_kategori_by_kategori(1)
-        for sub in sub_kat_list:
-            print(f"  {sub['id']}. {sub['nama']} ({sub['kode']})")
-        
-        print("\n=== PRODUK (Sub Kategori: Pulsa Reguler) ===")
-        produk_list = db.get_produk_by_sub_kategori(1)
-        for prod in produk_list[:5]:  # Show first 5
-            print(f"  {prod['kode']}: {prod['nama_produk']} - Rp {prod['harga_jual']:,.0f}")
-        
-        print("\n=== SEARCH PRODUK (keyword: 'telkomsel') ===")
-        search_results = db.search_produk("telkomsel")
-        for prod in search_results[:5]:
-            print(f"  {prod['kode']}: {prod['nama_produk']} ({prod['kategori_nama']} > {prod['sub_kategori_nama']})")
-        
-        print("\n=== STATISTIK ===")
-        stats = db.get_statistics()
-        print(f"Total Kategori: {stats['total_kategori']}")
-        print(f"Total Sub Kategori: {stats['total_sub_kategori']}")
-        print(f"Total Produk: {stats['total_produk']}")
-        print("\nProduk per Kategori:")
-        for item in stats['produk_per_kategori']:
-            print(f"  {item['kategori']}: {item['jumlah_produk']} produk")
+    try:
+        main()
+    except KeyboardInterrupt:
+        print_error("\n\nImport cancelled by user (Ctrl+C)")
+        sys.exit(1)
+    except Exception as e:
+        print_error(f"\n\nUnexpected error: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)

@@ -1,143 +1,15 @@
 -- ============================================================
 -- SAMPLE PRODUCT DATA - DATABASE PPOB NORMALISASI
--- Data produk untuk semua kategori
+-- Data produk untuk kategori: Game, Prabayar, Paket Data
 -- ============================================================
--- Jalankan setelah sample_data.sql berhasil dieksekusi
--- Command: sqlite3 db/ppob.db < db/sample_product.sql
-
--- ============================================================
--- 3. INSERT PRODUK - KATEGORI: PPOB
--- ============================================================
-
--- LISTRIK (sub_kategori_id = 1)
-INSERT INTO produk_ppob (kode, nama_produk, sub_kategori_id, hpp, biaya_admin, fee_mitra, markup, harga_beli, harga_jual, profit) VALUES
-('PLN20', 'Token PLN 20.000', 1, 20000, 1500, 200, 300, 21700, 22000, 300),
-('PLN50', 'Token PLN 50.000', 1, 50000, 1500, 300, 500, 51800, 52300, 500),
-('PLN100', 'Token PLN 100.000', 1, 100000, 1500, 400, 600, 101900, 102500, 600),
-('PLN200', 'Token PLN 200.000', 1, 200000, 1500, 500, 800, 201800, 202600, 800),
-('PLN500', 'Token PLN 500.000', 1, 500000, 1500, 800, 1200, 502300, 503500, 1200),
-('PLN1JT', 'Token PLN 1.000.000', 1, 1000000, 1500, 1000, 1500, 1002500, 1004000, 1500),
-('PLNPASCA', 'PLN Pascabayar', 1, 0, 2500, 300, 700, 2800, 3500, 700);
-
--- TELEKOMUNIKASI (sub_kategori_id = 2)
-INSERT INTO produk_ppob (kode, nama_produk, sub_kategori_id, hpp, biaya_admin, fee_mitra, markup, harga_beli, harga_jual, profit) VALUES
-('TELKOM', 'Telkom Pascabayar', 2, 0, 2500, 300, 700, 2800, 3500, 700),
-('INDIHOME', 'IndiHome Pascabayar', 2, 0, 2500, 500, 1000, 3000, 4000, 1000),
-('FIRSTMEDIA', 'First Media', 2, 0, 2500, 500, 1000, 3000, 4000, 1000),
-('BIZNET', 'Biznet Home', 2, 0, 2500, 500, 1000, 3000, 4000, 1000),
-('HALO', 'Telkomsel Halo', 2, 0, 2500, 400, 800, 2900, 3700, 800);
-
--- MULTIFINANCE (sub_kategori_id = 3)
-INSERT INTO produk_ppob (kode, nama_produk, sub_kategori_id, hpp, biaya_admin, fee_mitra, markup, harga_beli, harga_jual, profit) VALUES
-('BAF', 'BAF (Bussan Auto Finance)', 3, 0, 2500, 500, 1000, 3000, 4000, 1000),
-('FIF', 'FIF (Federal International Finance)', 3, 0, 2500, 500, 1000, 3000, 4000, 1000),
-('ADIRA', 'Adira Finance', 3, 0, 2500, 500, 1000, 3000, 4000, 1000),
-('WOM', 'WOM Finance', 3, 0, 2500, 500, 1000, 3000, 4000, 1000),
-('MANDIRI_TUNAS', 'Mandiri Tunas Finance', 3, 0, 2500, 500, 1000, 3000, 4000, 1000);
-
--- TV BERBAYAR (sub_kategori_id = 4)
-INSERT INTO produk_ppob (kode, nama_produk, sub_kategori_id, hpp, biaya_admin, fee_mitra, markup, harga_beli, harga_jual, profit) VALUES
-('INDIHOME_TV', 'IndiHome TV', 4, 0, 2500, 500, 1000, 3000, 4000, 1000),
-('TRANSVISION', 'Transvision', 4, 0, 2500, 500, 1000, 3000, 4000, 1000),
-('ORANGE_TV', 'Orange TV', 4, 0, 2500, 500, 1000, 3000, 4000, 1000),
-('TOPAS_TV', 'Topas TV', 4, 0, 2500, 500, 1000, 3000, 4000, 1000);
-
--- Nexparabola (sub_kategori_id = 5)
-INSERT INTO produk_ppob (kode, nama_produk, sub_kategori_id, hpp, biaya_admin, fee_mitra, markup, harga_beli, harga_jual, profit) VALUES
-('NEXMEDIA', 'Nexmedia', 5, 0, 2500, 500, 1000, 3000, 4000, 1000),
-('K_VISION', 'K-Vision', 5, 0, 2500, 500, 1000, 3000, 4000, 1000),
-('MATRIX', 'Matrix Garuda', 5, 0, 2500, 500, 1000, 3000, 4000, 1000);
-
--- PDAM (sub_kategori_id = 6)
-INSERT INTO produk_ppob (kode, nama_produk, sub_kategori_id, hpp, biaya_admin, fee_mitra, markup, harga_beli, harga_jual, profit) VALUES
-('PDAM_JKT', 'PDAM Jakarta (PAM Jaya)', 6, 0, 2500, 300, 500, 2800, 3300, 500),
-('PDAM_BDG', 'PDAM Bandung', 6, 0, 2500, 300, 500, 2800, 3300, 500),
-('PDAM_SBY', 'PDAM Surabaya', 6, 0, 2500, 300, 500, 2800, 3300, 500),
-('PDAM_SMG', 'PDAM Semarang', 6, 0, 2500, 300, 500, 2800, 3300, 500),
-('PDAM_MDN', 'PDAM Medan', 6, 0, 2500, 300, 500, 2800, 3300, 500),
-('PDAM_MKS', 'PDAM Makassar', 6, 0, 2500, 300, 500, 2800, 3300, 500);
-
--- ASURANSI (sub_kategori_id = 7)
-INSERT INTO produk_ppob (kode, nama_produk, sub_kategori_id, hpp, biaya_admin, fee_mitra, markup, harga_beli, harga_jual, profit) VALUES
-('BPJS_KLS1', 'BPJS Kesehatan Kelas 1', 7, 150000, 2500, 500, 1000, 153000, 154000, 1000),
-('BPJS_KLS2', 'BPJS Kesehatan Kelas 2', 7, 100000, 2500, 500, 1000, 103000, 104000, 1000),
-('BPJS_KLS3', 'BPJS Kesehatan Kelas 3', 7, 42000, 2500, 300, 700, 44800, 45500, 700),
-('BPJS_TK', 'BPJS Ketenagakerjaan', 7, 0, 2500, 500, 1000, 3000, 4000, 1000);
-
--- TRANSFER DANA (sub_kategori_id = 8)
-INSERT INTO produk_ppob (kode, nama_produk, sub_kategori_id, hpp, biaya_admin, fee_mitra, markup, harga_beli, harga_jual, profit) VALUES
-('TRF_BANK', 'Transfer Antar Bank', 8, 0, 5000, 500, 1500, 5500, 7000, 1500),
-('TRF_BCA', 'Transfer ke BCA', 8, 0, 3000, 300, 700, 3300, 4000, 700),
-('TRF_MANDIRI', 'Transfer ke Mandiri', 8, 0, 3000, 300, 700, 3300, 4000, 700),
-('TRF_BNI', 'Transfer ke BNI', 8, 0, 3000, 300, 700, 3300, 4000, 700),
-('TRF_BRI', 'Transfer ke BRI', 8, 0, 3000, 300, 700, 3300, 4000, 700);
-
--- PGN (sub_kategori_id = 9)
-INSERT INTO produk_ppob (kode, nama_produk, sub_kategori_id, hpp, biaya_admin, fee_mitra, markup, harga_beli, harga_jual, profit) VALUES
-('PGN', 'PGN (Perusahaan Gas Negara)', 9, 0, 2500, 500, 1000, 3000, 4000, 1000),
-('PGN_NONSUBSIDI', 'PGN Non Subsidi', 9, 0, 2500, 500, 1000, 3000, 4000, 1000);
-
--- VOUCHER (sub_kategori_id = 10)
-INSERT INTO produk_ppob (kode, nama_produk, sub_kategori_id, hpp, biaya_admin, fee_mitra, markup, harga_beli, harga_jual, profit) VALUES
-('GRAB_FOOD50', 'Grab Food Voucher 50.000', 10, 50000, 0, 500, 1500, 50500, 52000, 1500),
-('GRAB_FOOD100', 'Grab Food Voucher 100.000', 10, 100000, 0, 800, 2500, 100800, 103300, 2500),
-('GOJEK50', 'GoJek Voucher 50.000', 10, 50000, 0, 500, 1500, 50500, 52000, 1500),
-('GOJEK100', 'GoJek Voucher 100.000', 10, 100000, 0, 800, 2500, 100800, 103300, 2500),
-('SHOPEE50', 'Shopee Voucher 50.000', 10, 50000, 0, 500, 1500, 50500, 52000, 1500),
-('TOKPED50', 'Tokopedia Voucher 50.000', 10, 50000, 0, 500, 1500, 50500, 52000, 1500);
-
--- STREAMING (sub_kategori_id = 11)
-INSERT INTO produk_ppob (kode, nama_produk, sub_kategori_id, hpp, biaya_admin, fee_mitra, markup, harga_beli, harga_jual, profit) VALUES
-('NETFLIX_MOBILE', 'Netflix Mobile', 11, 54000, 0, 500, 1000, 54500, 55500, 1000),
-('NETFLIX_BASIC', 'Netflix Basic', 11, 65000, 0, 600, 1500, 65600, 67100, 1500),
-('NETFLIX_STANDARD', 'Netflix Standard', 11, 120000, 0, 800, 2500, 120800, 123300, 2500),
-('NETFLIX_PREMIUM', 'Netflix Premium', 11, 186000, 0, 1000, 3000, 187000, 190000, 3000),
-('DISNEY', 'Disney+ Hotstar', 11, 39000, 0, 500, 1000, 39500, 40500, 1000),
-('VIDIO', 'Vidio Premier', 11, 29000, 0, 300, 700, 29300, 30000, 700),
-('SPOTIFY', 'Spotify Premium', 11, 54990, 0, 500, 1500, 55490, 56990, 1500),
-('YOUTUBE_PREMIUM', 'YouTube Premium', 11, 59000, 0, 600, 1500, 59600, 61100, 1500);
-
--- DIRECT TOPUP (sub_kategori_id = 12)
-INSERT INTO produk_ppob (kode, nama_produk, sub_kategori_id, hpp, biaya_admin, fee_mitra, markup, harga_beli, harga_jual, profit) VALUES
-('TOPUP_STEAM10', 'Steam Wallet 10.000', 12, 10000, 0, 200, 500, 10200, 10700, 500),
-('TOPUP_STEAM20', 'Steam Wallet 20.000', 12, 20000, 0, 300, 700, 20300, 21000, 700),
-('TOPUP_STEAM50', 'Steam Wallet 50.000', 12, 50000, 0, 500, 1500, 50500, 52000, 1500),
-('TOPUP_STEAM100', 'Steam Wallet 100.000', 12, 100000, 0, 800, 2500, 100800, 103300, 2500),
-('TOPUP_GOOGLE10', 'Google Play 10.000', 12, 10000, 0, 200, 500, 10200, 10700, 500),
-('TOPUP_GOOGLE25', 'Google Play 25.000', 12, 25000, 0, 300, 800, 25300, 26100, 800),
-('TOPUP_GOOGLE50', 'Google Play 50.000', 12, 50000, 0, 500, 1500, 50500, 52000, 1500),
-('TOPUP_GOOGLE100', 'Google Play 100.000', 12, 100000, 0, 800, 2500, 100800, 103300, 2500);
-
--- UANG ELEKTRONIK (sub_kategori_id = 13)
-INSERT INTO produk_ppob (kode, nama_produk, sub_kategori_id, hpp, biaya_admin, fee_mitra, markup, harga_beli, harga_jual, profit) VALUES
-('GOPAY10', 'GoPay 10.000', 13, 10000, 500, 100, 200, 10600, 10800, 200),
-('GOPAY20', 'GoPay 20.000', 13, 20000, 500, 150, 300, 20650, 20950, 300),
-('GOPAY50', 'GoPay 50.000', 13, 50000, 500, 200, 500, 50700, 51200, 500),
-('GOPAY100', 'GoPay 100.000', 13, 100000, 500, 300, 700, 100800, 101500, 700),
-('OVO10', 'OVO 10.000', 13, 10000, 500, 100, 200, 10600, 10800, 200),
-('OVO20', 'OVO 20.000', 13, 20000, 500, 150, 300, 20650, 20950, 300),
-('OVO50', 'OVO 50.000', 13, 50000, 500, 200, 500, 50700, 51200, 500),
-('OVO100', 'OVO 100.000', 13, 100000, 500, 300, 700, 100800, 101500, 700),
-('DANA10', 'DANA 10.000', 13, 10000, 500, 100, 200, 10600, 10800, 200),
-('DANA25', 'DANA 25.000', 13, 25000, 500, 150, 300, 25650, 25950, 300),
-('DANA50', 'DANA 50.000', 13, 50000, 500, 200, 500, 50700, 51200, 500),
-('DANA100', 'DANA 100.000', 13, 100000, 500, 300, 700, 100800, 101500, 700),
-('SHOPEEPAY10', 'ShopeePay 10.000', 13, 10000, 500, 100, 200, 10600, 10800, 200),
-('SHOPEEPAY25', 'ShopeePay 25.000', 13, 25000, 500, 150, 300, 25650, 25950, 300),
-('SHOPEEPAY50', 'ShopeePay 50.000', 13, 50000, 500, 200, 500, 50700, 51200, 500),
-('LINKAJA10', 'LinkAja 10.000', 13, 10000, 500, 100, 200, 10600, 10800, 200),
-('LINKAJA25', 'LinkAja 25.000', 13, 25000, 500, 150, 300, 25650, 25950, 300),
-('LINKAJA50', 'LinkAja 50.000', 13, 50000, 500, 200, 500, 50700, 51200, 500);
-
--- PAJAK (sub_kategori_id = 14)
-INSERT INTO produk_ppob (kode, nama_produk, sub_kategori_id, hpp, biaya_admin, fee_mitra, markup, harga_beli, harga_jual, profit) VALUES
-('PBB', 'PBB (Pajak Bumi dan Bangunan)', 14, 0, 2500, 500, 1000, 3000, 4000, 1000),
-('SAMSAT', 'Pajak Kendaraan Bermotor', 14, 0, 5000, 800, 2000, 5800, 7800, 2000),
-('PAJAK_ONLINE', 'E-Samsat Online', 14, 0, 3000, 500, 1000, 3500, 4500, 1000);
-
+-- CATATAN: Data produk PPOB sudah ada di file sample_data_PPOB.sql
+-- File ini hanya berisi produk untuk kategori Game, Prabayar, dan Paket Data
+-- 
+-- Jalankan setelah sample_data_kategori_sub.sql dan sample_data_PPOB.sql
+-- Command: sqlite3 db/ppob.db < db/sample_data_product.sql
 
 -- ============================================================
--- 4. INSERT PRODUK - KATEGORI: GAME
+-- 1. INSERT PRODUK - KATEGORI: GAME
 -- ============================================================
 
 -- PUBG Mobile (sub_kategori_id = 15)
@@ -227,7 +99,7 @@ INSERT INTO produk_ppob (kode, nama_produk, sub_kategori_id, hpp, biaya_admin, f
 ('HSR2240', 'Honkai Star Rail 2240 Oneiric', 33, 499000, 0, 2500, 8000, 501500, 509500, 8000);
 
 -- ============================================================
--- 5. INSERT PRODUK - KATEGORI: PRABAYAR
+-- 2. INSERT PRODUK - KATEGORI: PRABAYAR
 -- ============================================================
 
 -- Telkomsel (sub_kategori_id = 34)
@@ -288,7 +160,7 @@ INSERT INTO produk_ppob (kode, nama_produk, sub_kategori_id, hpp, biaya_admin, f
 ('BYU100', 'By.U 100.000', 39, 100000, 0, 300, 500, 100300, 100800, 500);
 
 -- ============================================================
--- 6. INSERT PRODUK - KATEGORI: PAKET DATA
+-- 3. INSERT PRODUK - KATEGORI: PAKET DATA
 -- ============================================================
 
 -- Telkomsel Data (sub_kategori_id = 40)
