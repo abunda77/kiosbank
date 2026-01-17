@@ -1,12 +1,20 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Environment Variables Verification Script
 Verifies that all required environment variables are properly configured
 """
 
 import sys
+import os
 from pathlib import Path
 from env_config import get_env, get_env_bool, get_env_int
+
+# Configure UTF-8 encoding for Windows console
+if sys.platform == 'win32':
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 def print_header(text):
     """Print formatted header"""
@@ -16,7 +24,8 @@ def print_header(text):
 
 def check_env_file_exists():
     """Check if .env file exists"""
-    env_path = Path(__file__).parent / '.env'
+    # Look for .env in project root (parent of app folder)
+    env_path = Path(__file__).parent.parent / '.env'
     if not env_path.exists():
         print("❌ .env file not found!")
         print("\nPlease create .env file:")
@@ -127,7 +136,8 @@ def verify_gitignore():
     """Verify .gitignore is properly configured"""
     print_header("Verifying .gitignore Configuration")
     
-    gitignore_path = Path(__file__).parent / '.gitignore'
+    # Look for .gitignore in project root (parent of app folder)
+    gitignore_path = Path(__file__).parent.parent / '.gitignore'
     if not gitignore_path.exists():
         print("⚠️  .gitignore file not found")
         return False

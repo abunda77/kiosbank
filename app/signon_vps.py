@@ -1,8 +1,16 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+import sys
 import requests
 from requests.auth import HTTPDigestAuth
 import urllib3
-import sys
 from env_config import get_env, get_env_bool, get_env_int
+
+# Configure UTF-8 encoding for Windows console
+if sys.platform == 'win32':
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 # Suppress SSL warnings
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)

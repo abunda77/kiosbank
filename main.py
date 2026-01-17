@@ -13,6 +13,7 @@ import threading
 import queue
 import sys
 import os
+import platform
 from datetime import datetime
 
 # ==================== THEME CONFIGURATION ====================
@@ -79,6 +80,7 @@ class KiosbankGUI:
         self.output_queue = queue.Queue()
         self.current_process = None
         self.is_running = False
+        self.tunnel_process = None  # Track SSH tunnel process
         
         self.setup_ui()
         self.check_queue()
@@ -122,15 +124,23 @@ class KiosbankGUI:
         self.create_card(left_panel, "CORE OPERATIONS", [
             {
                 'name': '🔐 Sign-On VPS',
-                'script': 'signon_vps.py',
+                'script': 'app/signon_vps.py',
                 'desc': 'Establish session with Kiosbank API',
                 'color': THEME['accent_color']
             },
             {
                 'name': '🚇 Start Tunnel',
-                'script': 'start_ssh_tunnel.py',
+                'script': 'app/start_ssh_tunnel.py',
                 'desc': 'Open secure SOCKS5 tunnel',
-                'color': THEME['accent_color']
+                'color': THEME['accent_color'],
+                'separate_window': True  # Run in separate terminal
+            },
+            {
+                'name': '⏹ Stop Tunnel',
+                'action': 'stop_tunnel',
+                'desc': 'Close SSH tunnel window',
+                'color': THEME['danger'],
+                'hover': '#DC2626'
             }
         ])
         
@@ -140,21 +150,21 @@ class KiosbankGUI:
         self.create_card(left_panel, "DIAGNOSTICS & CHECKS", [
             {
                 'name': '🌐 Check IP Address',
-                'script': 'check_ip.py',
+                'script': 'app/check_ip.py',
                 'desc': 'Verify current public IP',
                 'color': '#4B5563', 
                 'hover': '#374151'
             },
             {
                 'name': '🔌 Check Port Status',
-                'script': 'cekport_gui.py',
+                'script': 'app/cekport_gui.py',
                 'desc': 'Analyze open ports & proxy',
                 'color': '#4B5563',
                 'hover': '#374151'
             },
             {
                 'name': '✅ Verify Environment',
-                'script': 'verify_env.py',
+                'script': 'app/verify_env.py',
                 'desc': 'Validate .env configuration',
                 'color': '#059669',
                 'hover': '#047857'
@@ -247,10 +257,16 @@ class KiosbankGUI:
             btn_frame = tk.Frame(inner, bg="white", pady=2)
             btn_frame.pack(fill=tk.X, pady=3)
             
+            # Determine command based on action or script
+            if 'action' in btn_data:
+                cmd = lambda s=btn_data: self.handle_action(s['action'])
+            else:
+                cmd = lambda s=btn_data: self.run_script(s)
+            
             ModernButton(
                 btn_frame,
                 text=btn_data['name'],
-                command=lambda s=btn_data: self.run_script(s),
+                command=cmd,
                 bg=btn_data.get('color', THEME['accent_color']),
                 hover_bg=btn_data.get('hover'),
                 width=20
@@ -324,6 +340,11 @@ class KiosbankGUI:
         self.status_bar.config(text=f"[{timestamp}] {message}", bg=bg_color, fg=fg_color)
 
     def run_script(self, script_info):
+        # Check if this should run in separate window (for SSH tunnel)
+        if script_info.get('separate_window', False):
+            self.run_in_separate_window(script_info)
+            return
+        
         if self.is_running:
             self.append_output("\n⚠️  Process is already running! Please wait.\n\n", THEME['warning'])
             return
@@ -344,6 +365,99 @@ class KiosbankGUI:
             daemon=True
         )
         thread.start()
+
+    def run_in_separate_window(self, script_info):
+        """Run script in a separate terminal window (for long-running processes like SSH tunnel)"""
+        try:
+            script_name = script_info['script']
+            
+            # Check if tunnel is already running
+            if self.tunnel_process and self.tunnel_process.poll() is None:
+                self.append_output("\n⚠️  SSH Tunnel is already running in a separate window!\n", THEME['warning'])
+                self.append_output("Close the tunnel window first or use 'Stop Tunnel' button.\n\n")
+                return
+            
+            self.clear_output()
+            self.append_output(f"🚀 LAUNCHING: {script_info['name']} in separate window...\n", THEME['accent_color'])
+            self.append_output(f"📂 File: {script_name}\n", "#6B7280")
+            self.append_output("-" * 60 + "\n", "#374151")
+            self.append_output("\n✅ Tunnel window opened successfully!\n", THEME['success'])
+            self.append_output("ℹ️  The SSH tunnel is now running in a separate terminal window.\n", THEME['term_info'])
+            self.append_output("ℹ️  You can continue using other menu options in this GUI.\n", THEME['term_info'])
+            self.append_output("ℹ️  To stop the tunnel, click 'Stop Tunnel' or close the terminal window.\n\n", THEME['term_info'])
+            
+            # Windows: Use CREATE_NEW_CONSOLE flag
+            if platform.system() == "Windows":
+                CREATE_NEW_CONSOLE = 0x00000010
+                self.tunnel_process = subprocess.Popen(
+                    [sys.executable, script_name],
+                    creationflags=CREATE_NEW_CONSOLE
+                )
+            else:
+                # Linux/Mac: Use terminal emulator
+                terminal_commands = [
+                    ['gnome-terminal', '--', sys.executable, script_name],
+                    ['xterm', '-e', sys.executable, script_name],
+                    ['konsole', '-e', sys.executable, script_name],
+                ]
+                
+                for cmd in terminal_commands:
+                    try:
+                        self.tunnel_process = subprocess.Popen(cmd)
+                        break
+                    except FileNotFoundError:
+                        continue
+                else:
+                    raise Exception("No suitable terminal emulator found")
+            
+            self.update_status("SSH Tunnel running in separate window", "success")
+            
+        except Exception as e:
+            self.append_output(f"\n❌ ERROR: Failed to open separate window\n", THEME['danger'])
+            self.append_output(f"Details: {str(e)}\n\n")
+            self.update_status("Failed to start tunnel", "error")
+
+    def handle_action(self, action_name):
+        """Handle special actions (not script execution)"""
+        if action_name == 'stop_tunnel':
+            self.stop_tunnel()
+        else:
+            self.append_output(f"\n⚠️  Unknown action: {action_name}\n", THEME['warning'])
+
+    def stop_tunnel(self):
+        """Stop the SSH tunnel running in separate window"""
+        if not self.tunnel_process or self.tunnel_process.poll() is not None:
+            self.clear_output()
+            self.append_output("ℹ️  No active SSH tunnel found.\n", THEME['term_info'])
+            self.append_output("The tunnel may have already been closed.\n\n")
+            self.update_status("No active tunnel", "info")
+            return
+        
+        try:
+            self.clear_output()
+            self.append_output("⏹ Stopping SSH Tunnel...\n", THEME['warning'])
+            
+            # Terminate the tunnel process
+            self.tunnel_process.terminate()
+            
+            # Wait for process to end (with timeout)
+            try:
+                self.tunnel_process.wait(timeout=3)
+                self.append_output("✅ SSH Tunnel stopped successfully!\n", THEME['success'])
+                self.update_status("Tunnel stopped", "success")
+            except subprocess.TimeoutExpired:
+                # Force kill if it doesn't terminate gracefully
+                self.tunnel_process.kill()
+                self.append_output("⚠️  Tunnel forcefully terminated.\n", THEME['warning'])
+                self.update_status("Tunnel killed", "warning")
+            
+            self.tunnel_process = None
+            
+        except Exception as e:
+            self.append_output(f"\n❌ ERROR: Failed to stop tunnel\n", THEME['danger'])
+            self.append_output(f"Details: {str(e)}\n\n")
+            self.update_status("Failed to stop tunnel", "error")
+
 
     def execute_script(self, script_name):
         try:

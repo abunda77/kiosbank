@@ -20,7 +20,8 @@ def load_env_file(env_path: Optional[str] = None) -> dict:
         Dictionary of environment variables
     """
     if env_path is None:
-        env_path = Path(__file__).parent / '.env'
+        # Look for .env in project root (parent of app folder)
+        env_path = Path(__file__).parent.parent / '.env'
     else:
         env_path = Path(env_path)
     
