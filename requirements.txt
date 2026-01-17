@@ -1,0 +1,29 @@
+# ============================================================
+# KIOSBANK Management GUI - Requirements
+# ============================================================
+# Core dependencies for the KIOSBANK Management Console
+# Install with: pip install -r requirements.txt
+# ============================================================
+
+# HTTP Requests & API Communication
+requests>=2.31.0
+urllib3>=2.0.0
+
+# SOCKS Proxy Support (for SSH tunnel)
+PySocks>=1.7.1
+
+# Database (SQLite is built-in, but we include this for type hints)
+# sqlite3 is included in Python standard library
+
+# Type Hints Support (for Python < 3.9)
+typing-extensions>=4.8.0
+
+# ============================================================
+# Optional: Development & Testing
+# ============================================================
+# Uncomment if needed for development
+
+# pytest>=7.4.0           # Testing framework
+# black>=23.0.0           # Code formatter
+# flake8>=6.0.0           # Linting
+# mypy>=1.5.0             # Type checking
