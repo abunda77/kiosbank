@@ -107,9 +107,9 @@ def main():
     sql_files = [
         ("structure_table.sql", "Creating database structure"),
         ("sample_data_KATEGORI_SUBKATEGORI.sql", "Importing categories and sub-categories"),
-        # ("sample_data_PPOB.sql", "Importing PPOB products"),
-        ("sample_data_PULSA_PRABAYAR.sql", "Importing PULSA PRABAYAR products")
-        # ("sample_data_PAKET_DATA.sql", "Importing PAKET DATA products"),
+        ("sample_data_PPOB.sql", "Importing PPOB products"),
+        ("sample_data_PULSA_PRABAYAR.sql", "Importing PULSA PRABAYAR products"),
+        ("sample_data_PAKET_DATA.sql", "Importing PAKET DATA products"),
         # ("sample_data_GAME.sql", "Importing GAME products")
         # ("sample_data_product.sql", "Importing other products (Game, Pulsa, Paket Data)")
     ]
